@@ -19,14 +19,22 @@ class BatchDatabaseIOHandler<E>(
         }
 
     override fun readIterator(): BatchReader<List<E>> = object : BatchReader<List<E>> {
+        private var daoCount: Int? = null
+
+        private suspend fun batchDaoCount(): Int = daoCount ?: batchDao.count().also {
+            daoCount = it
+        }
+
         private var count = 0
         override suspend fun readNext(): Either<Failure, List<E>?> = requestDatabase {
-            batchDao.nextBatch(count, Math.min(batchDao.count() - count, batchSize)).also {
+            batchDao.nextBatch(count, Math.min(batchDaoCount() - count, batchSize)).also {
                 count += it?.size ?: 0
             }
         }
 
-        override suspend fun hasNext(): Boolean = batchDao.count() > count
+        override suspend fun hasNext(): Boolean {
+            return batchDaoCount() > count
+        }
     }
 
     companion object {

@@ -1,6 +1,7 @@
 package com.waz.zclient.feature.backup.zip
 
 import com.waz.zclient.core.exception.Failure
+import com.waz.zclient.core.exception.FeatureFailure
 import com.waz.zclient.core.exception.IOFailure
 import com.waz.zclient.core.functional.Either
 import java.io.File
@@ -15,19 +16,19 @@ import java.util.zip.ZipOutputStream
 
 class ZipHandlerDataSource(private val storageDir: File) : ZipHandler {
 
-    override fun zip(zipFileName: String, files: List<File>): Either<Failure, File> {
-        try {
-            val zipFile = createFile(zipFileName)
-
-            ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zip ->
-                files.map { writeZipEntry(zip, it) }
+    override fun zip(zipFileName: String, files: List<File>): Either<Failure, File> =
+        if (files.isEmpty()) {
+            Either.Left(ZipFailure("Nothing to zip, the list of files is empty"))
+        } else {
+            try {
+                val zipFile = createFile(zipFileName).apply {
+                    writeZipEntries(this, files)
+                }
+                Either.Right(zipFile)
+            } catch (ex: IOException) {
+                Either.Left(IOFailure(ex))
             }
-
-            return Either.Right(zipFile)
-        } catch (ex: IOException) {
-            return Either.Left(IOFailure(ex))
         }
-    }
 
     override fun unzip(zipFile: File): Either<Failure, List<File>> {
         val unzippedFiles = mutableListOf<File>()
@@ -43,6 +44,13 @@ class ZipHandlerDataSource(private val storageDir: File) : ZipHandler {
         }
         return Either.Right(unzippedFiles.toList())
     }
+
+    private fun writeZipEntries(zipFile: File, files: List<File>): Unit =
+        ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zip ->
+            files.forEach {
+                writeZipEntry(zip, it)
+            }
+        }
 
     private fun createFile(name: String) =
         File(storageDir, name).apply {
@@ -65,3 +73,5 @@ class ZipHandlerDataSource(private val storageDir: File) : ZipHandler {
             }
         }
 }
+
+data class ZipFailure(val msg: String) : FeatureFailure()
