@@ -1,10 +1,10 @@
 package com.waz.zclient.feature.backup.encryption.crypto
 
 import com.waz.zclient.core.exception.Failure
-import com.waz.zclient.core.exception.GenericUseCaseError
 import com.waz.zclient.core.functional.Either
 import com.waz.zclient.core.logging.Logger
 import com.waz.zclient.feature.backup.encryption.EncryptionHandlerDataSource
+import com.waz.zclient.feature.backup.encryption.error.EncryptionFailure
 import org.libsodium.jni.NaCl
 import org.libsodium.jni.Sodium
 import java.security.SecureRandom
@@ -20,7 +20,7 @@ class Crypto {
             System.loadLibrary("randombytes")
             Either.Right(Unit)
         } catch (ex: UnsatisfiedLinkError) {
-            Either.Left(GenericUseCaseError(ex))
+            Either.Left(EncryptionFailure(ex.localizedMessage))
         }
     }
 
