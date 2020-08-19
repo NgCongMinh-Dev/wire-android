@@ -54,7 +54,7 @@ class CreateBackUpUseCaseTest : UnitTest() {
                 testCoroutineScope
             )
 
-            val result = createBackUpUseCase.run(Triple(userId, userHandle, password))
+            val result = createBackUpUseCase.run(CreateBackUpUseCaseParams(userId, userHandle, password))
 
             verify(repo1).saveBackup()
             verify(repo2).saveBackup()
@@ -85,7 +85,7 @@ class CreateBackUpUseCaseTest : UnitTest() {
                 testCoroutineScope
             )
 
-            val result = createBackUpUseCase.run(Triple(userId, userHandle, password))
+            val result = createBackUpUseCase.run(CreateBackUpUseCaseParams(userId, userHandle, password))
 
             verify(repo1).saveBackup()
             verify(repo2).saveBackup()
@@ -116,7 +116,7 @@ class CreateBackUpUseCaseTest : UnitTest() {
                     testCoroutineScope
             )
 
-            val result = createBackUpUseCase.run(Triple(userId, userHandle, password))
+            val result = createBackUpUseCase.run(CreateBackUpUseCaseParams(userId, userHandle, password))
 
             verify(repo1).saveBackup()
             verify(repo2).saveBackup()
@@ -147,7 +147,7 @@ class CreateBackUpUseCaseTest : UnitTest() {
                 testCoroutineScope
             )
 
-            val result = createBackUpUseCase.run(Triple(userId, userHandle, password))
+            val result = createBackUpUseCase.run(CreateBackUpUseCaseParams(userId, userHandle, password))
 
             verify(repo1).saveBackup()
             verify(repo2).saveBackup()
@@ -178,7 +178,7 @@ class CreateBackUpUseCaseTest : UnitTest() {
                     testCoroutineScope
             )
 
-            val result = createBackUpUseCase.run(Triple(userId, userHandle, password))
+            val result = createBackUpUseCase.run(CreateBackUpUseCaseParams(userId, userHandle, password))
 
             verify(repo1).saveBackup()
             verify(repo2).saveBackup()
@@ -198,12 +198,12 @@ class CreateBackUpUseCaseTest : UnitTest() {
          */
         fun <T> any(): T = Mockito.any<T>()
 
-        suspend fun mockBackUpRepo(backUpSuccess: Boolean = true): BackUpRepository<File> = mock(BackUpRepository::class.java).also {
+        suspend fun mockBackUpRepo(backUpSuccess: Boolean = true): BackUpRepository<List<File>> = mock(BackUpRepository::class.java).also {
             `when`(it.saveBackup()).thenReturn(
-                    if (backUpSuccess) Either.Right(createTempFile(suffix = ".json"))
+                    if (backUpSuccess) Either.Right(listOf(createTempFile(suffix = ".json")))
                     else Either.Left(DatabaseError)
             )
-        } as BackUpRepository<File>
+        } as BackUpRepository<List<File>>
 
         fun mockZipHandler(zipSuccess: Boolean = true): ZipHandler = mock(ZipHandler::class.java).also {
             `when`(it.zip(anyString(), anyList())).thenReturn(
