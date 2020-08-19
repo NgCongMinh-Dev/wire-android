@@ -23,11 +23,7 @@ object KotlinServices {
     }
 
     fun createBackup(userId: UserId, handle: String, password: String, onSuccess: (File) -> Unit, onFailure: (String) -> Unit): Unit =
-        try {
-            backUpViewModel.createBackup(userId, handle, password) { result ->
-                result.onSuccess(onSuccess).onFailure { onFailure(it.toString()) }
-            }
-        } catch(ex: Exception) {
-            onFailure(ex.message.orEmpty())
+        backUpViewModel.createBackup(userId, handle, password) { result ->
+            result.onSuccess(onSuccess).onFailure { onFailure(it.toString()) }
         }
 }
