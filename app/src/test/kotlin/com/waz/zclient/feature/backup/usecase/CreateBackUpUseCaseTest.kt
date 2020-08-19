@@ -6,7 +6,7 @@ import com.waz.zclient.core.exception.DatabaseError
 import com.waz.zclient.core.exception.FeatureFailure
 import com.waz.zclient.core.functional.Either
 import com.waz.zclient.feature.backup.BackUpRepository
-import com.waz.zclient.feature.backup.encryption.EncryptionHandler
+import com.waz.zclient.feature.backup.encryption.EncryptionHandlerDataSource
 import com.waz.zclient.feature.backup.metadata.MetaDataHandler
 import com.waz.zclient.feature.backup.zip.ZipHandler
 
@@ -61,7 +61,7 @@ class CreateBackUpUseCaseTest : UnitTest() {
             verify(repo3).saveBackup()
             verify(metaDataHandler).generateMetaDataFile(userId, userHandle)
             verify(zipHandler).zip(anyString(), anyList())
-            verify(encryptionHandler).encrypt(any(), any(), anyString())
+            verify(encryptionHandler).encryptBackup(any(), any(), anyString())
 
             assert(result.isRight)
         }
@@ -154,7 +154,7 @@ class CreateBackUpUseCaseTest : UnitTest() {
             verify(repo3).saveBackup()
             verify(metaDataHandler).generateMetaDataFile(userId, userHandle)
             verify(zipHandler).zip(anyString(), anyList())
-            verify(encryptionHandler).encrypt(any(), any(), anyString())
+            verify(encryptionHandler).encryptBackup(any(), any(), anyString())
 
             assertEquals(Either.Left(FakeEncryptionFailure), result)
         }
@@ -212,8 +212,8 @@ class CreateBackUpUseCaseTest : UnitTest() {
             )
         } as ZipHandler
 
-        fun mockEncryptionHandler(encryptionSuccess: Boolean = true): EncryptionHandler = mock(EncryptionHandler::class.java).also {
-            `when`(it.encrypt(any(), any(), anyString())).thenReturn(
+        fun mockEncryptionHandler(encryptionSuccess: Boolean = true): EncryptionHandlerDataSource = mock(EncryptionHandlerDataSource::class.java).also {
+            `when`(it.encryptBackup(any(), any(), anyString())).thenReturn(
                 if (encryptionSuccess) Either.Right(createTempFile(suffix = "_encrypted"))
                 else Either.Left(FakeEncryptionFailure)
             )

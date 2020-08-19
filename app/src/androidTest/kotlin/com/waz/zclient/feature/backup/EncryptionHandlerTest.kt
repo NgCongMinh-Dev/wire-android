@@ -4,7 +4,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.waz.model.UserId
 import com.waz.zclient.core.functional.Either.Left
 import com.waz.zclient.core.functional.Either.Right
-import com.waz.zclient.feature.backup.encryption.EncryptionHandler
 import com.waz.zclient.feature.backup.encryption.EncryptionHandlerDataSource
 import org.amshove.kluent.shouldEqual
 import org.junit.Assert.fail
@@ -25,14 +24,14 @@ class EncryptionHandlerTest {
         val password = generateText(8)
         val userId = UserId.apply()
 
-        val encryptionHandler: EncryptionHandler = EncryptionHandlerDataSource()
+        val encryptionHandler: EncryptionHandlerDataSource = EncryptionHandlerDataSource()
 
-        when (val res1 = encryptionHandler.encrypt(textFile, userId, password)) {
+        when (val res1 = encryptionHandler.encryptBackup(textFile, userId, password)) {
             is Left -> fail(res1.a.toString())
             is Right -> {
                 val encryptedFile = res1.b
                 println(encryptedFile.absolutePath)
-                when (val res2 = encryptionHandler.decrypt(encryptedFile, userId, password)) {
+                when (val res2 = encryptionHandler.decryptBackup(encryptedFile, userId, password)) {
                     is Left -> fail(res2.a.toString())
                     is Right -> {
                         val decryptedFile = res2.b
