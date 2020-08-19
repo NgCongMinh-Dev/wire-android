@@ -53,10 +53,10 @@ class CreateBackUpUseCase(
         return "Wire-$userHandle-Backup_$timestamp.android_wbu"
     }
 
-    private fun extractFiles(list: List<Either<Failure, List<File>>>): Either<Failure, List<File>> {
+    private fun extractFiles(filesOrFailure: List<Either<Failure, List<File>>>): Either<Failure, List<File>> {
         val files = mutableListOf<File>()
 
-        list.forEach {
+        filesOrFailure.forEach {
             when (it) {
                 is Either.Right -> files.addAll(it.b)
                 is Either.Left -> return Either.Left(it.a)

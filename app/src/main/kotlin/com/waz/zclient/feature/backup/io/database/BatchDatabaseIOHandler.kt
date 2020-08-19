@@ -26,10 +26,11 @@ class BatchDatabaseIOHandler<E>(
         }
 
         private var count = 0
-        override suspend fun readNext(): Either<Failure, List<E>?> = requestDatabase {
-            batchDao.nextBatch(count, Math.min(batchDaoCount() - count, batchSize)).also {
-                count += it?.size ?: 0
-            }
+
+        override suspend fun readNext(): Either<Failure, List<E>> = requestDatabase {
+            val batch = batchDao.nextBatch(count, Math.min(batchDao.count() - count, batchSize)) ?: emptyList()
+            count += batch.size
+            batch
         }
 
         override suspend fun hasNext(): Boolean {

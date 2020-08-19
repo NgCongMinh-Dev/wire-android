@@ -6,7 +6,6 @@ import com.waz.zclient.core.functional.onFailure
 import com.waz.zclient.core.functional.onSuccess
 import com.waz.zclient.feature.backup.zip.ZipFailure
 import com.waz.zclient.feature.backup.zip.ZipHandler
-import com.waz.zclient.feature.backup.zip.ZipHandlerDataSource
 import com.waz.zclient.feature.createTextFile
 import com.waz.zclient.feature.uniqueZipFileName
 import org.amshove.kluent.`should be greater than`
@@ -23,7 +22,7 @@ class ZipHandlerTest : UnitTest() {
         val textFile = createTextFile(tempDir)
         textFile.length() `should be greater than` 0
 
-        val zipHandler: ZipHandler = ZipHandlerDataSource(tempDir)
+        val zipHandler = ZipHandler(tempDir)
 
         zipHandler.zip(uniqueZipFileName(), listOf(textFile))
             .onSuccess { it.length() `should be greater than` 0 }
@@ -34,7 +33,7 @@ class ZipHandlerTest : UnitTest() {
     fun `given no input files, when zipped, then return a zip failure`() {
         val tempDir = createTempDir()
 
-        val zipHandler: ZipHandler = ZipHandlerDataSource(tempDir)
+        val zipHandler = ZipHandler(tempDir)
 
         zipHandler.zip(uniqueZipFileName(), emptyList())
             .onSuccess { fail("The test should fail with ZipFailure") }
@@ -46,7 +45,7 @@ class ZipHandlerTest : UnitTest() {
         val tempDir = createTempDir()
         val fileList = listOf(createTextFile(tempDir), createTextFile(tempDir), createTextFile(tempDir))
 
-        val zipHandler: ZipHandler = ZipHandlerDataSource(tempDir)
+        val zipHandler = ZipHandler(tempDir)
 
         zipHandler.zip(uniqueZipFileName(), fileList)
             .onSuccess { it.length() `should be greater than` 0 }
@@ -59,7 +58,7 @@ class ZipHandlerTest : UnitTest() {
         val originalFile = createTextFile(tempDir)
         val originalContents = originalFile.readText()
 
-        val zipHandler: ZipHandler = ZipHandlerDataSource(tempDir)
+        val zipHandler = ZipHandler(tempDir)
 
         val zipped = zipHandler.zip(uniqueZipFileName(), listOf(originalFile))
         assert(zipped.isRight)
@@ -86,7 +85,7 @@ class ZipHandlerTest : UnitTest() {
             originalFile2.name to originalContents2
         )
 
-        val zipHandler: ZipHandler = ZipHandlerDataSource(tempDir)
+        val zipHandler = ZipHandler(tempDir)
 
         val zipped = zipHandler.zip(uniqueZipFileName(), listOf(originalFile1, originalFile2))
         assert(zipped.isRight)
