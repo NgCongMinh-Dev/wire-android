@@ -53,7 +53,7 @@ class EncryptionHandlerDataSource(
             }
         }
     }
-    
+
     //This method returns the metadata in the format described here:
     //https://github.com/wearezeta/documentation/blob/master/topics/backup/use-cases/001-export-history.md
     private fun encryptedMetaDataBytes(salt: ByteArray, userId: UserId): Either<Failure, ByteArray> =

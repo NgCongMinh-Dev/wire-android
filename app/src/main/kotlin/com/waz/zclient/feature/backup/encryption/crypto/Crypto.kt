@@ -41,11 +41,17 @@ class Crypto {
             }
         }
 
-    internal fun initEncryptState(key: ByteArray, header: ByteArray): ByteArray? = initializeState(key, header) { s: ByteArray, h: ByteArray, k: ByteArray ->
+    internal fun initEncryptState(
+        key: ByteArray,
+        header: ByteArray
+    ) = initializeState(key, header) { s: ByteArray, h: ByteArray, k: ByteArray ->
         Sodium.crypto_secretstream_xchacha20poly1305_init_push(s, h, k)
     }
 
-    internal fun initDecryptState(key: ByteArray, header: ByteArray): ByteArray? = initializeState(key, header) { s: ByteArray, h: ByteArray, k: ByteArray ->
+    internal fun initDecryptState(
+        key: ByteArray,
+        header: ByteArray
+    ) = initializeState(key, header) { s: ByteArray, h: ByteArray, k: ByteArray ->
         Sodium.crypto_secretstream_xchacha20poly1305_init_pull(s, h, k)
     }
 
@@ -55,7 +61,10 @@ class Crypto {
         when (loadLibrary) {
             is Either.Right -> Sodium.randombytes(buffer, count)
             is Either.Left -> {
-                Logger.warn(EncryptionHandlerDataSource.TAG, "Libsodium failed to generate $count random bytes. Falling back to SecureRandom")
+                Logger.warn(
+                    EncryptionHandlerDataSource.TAG,
+                    "Libsodium failed to generate $count random bytes. Falling back to SecureRandom"
+                )
                 secureRandom.nextBytes(buffer)
             }
         }
@@ -103,7 +112,6 @@ class Crypto {
             memLimit(),
             Sodium.crypto_pwhash_alg_default()
         )
-
 
     companion object {
         //Got this magic number from https://github.com/joshjdevl/libsodium-jni/blob/master/src/test/java/org/libsodium/jni/crypto/SecretStreamTest.java#L48

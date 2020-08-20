@@ -35,7 +35,7 @@ class EncyptionHeaderMetaData(
             val header = EncryptedBackupHeader(CURRENT_VERSION, salt, hash, crypto.opsLimit(), crypto.memLimit())
             Either.Right(encryptionHeaderMapper.toByteArray(header))
         } ?: Either.Left(
-            EncryptionFailure("uuidHash length invalid, expected: ${UUID_HASH_LENGTH}, got: ${hash.size}")
+            EncryptionFailure("uuidHash length invalid, expected: $UUID_HASH_LENGTH, got: ${hash.size}")
         )
 }
 
