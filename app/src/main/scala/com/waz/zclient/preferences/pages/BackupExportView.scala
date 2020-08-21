@@ -29,7 +29,7 @@ import android.view.View
 import android.widget.LinearLayout
 import com.waz.log.BasicLogging.LogTag.DerivedLogTag
 import com.waz.model.AccountData.Password
-import com.waz.service.{UiLifeCycle, UserService, ZMessaging}
+import com.waz.service.{UiLifeCycle, UserService}
 import com.waz.threading.Threading
 import com.wire.signals.Signal
 import com.waz.utils.returning
@@ -45,18 +45,17 @@ class BackupExportView(context: Context, attrs: AttributeSet, style: Int)
   extends LinearLayout(context, attrs, style)
     with ViewHelper
     with DerivedLogTag {
-  
+
   def this(context: Context, attrs: AttributeSet) = this(context, attrs, 0)
+
   def this(context: Context) = this(context, null, 0)
 
   inflate(R.layout.backup_export_layout)
 
-  private val zms                = inject[Signal[ZMessaging]]
-  private val spinnerController  = inject[SpinnerController]
-  private val lifecycle          = inject[UiLifeCycle]
-  private val sharing            = inject[ExternalFileSharing]
-
-  private val backupButton = findById[MenuRowButton](R.id.backup_button)
+  private val spinnerController = inject[SpinnerController]
+  private val lifecycle         = inject[UiLifeCycle]
+  private val sharing           = inject[ExternalFileSharing]
+  private val backupButton      = findById[MenuRowButton](R.id.backup_button)
 
   backupButton.setOnClickProcess(requestPassword())
 
@@ -80,38 +79,30 @@ class BackupExportView(context: Context, attrs: AttributeSet, style: Int)
 
     spinnerController.showDimmedSpinner(show = true, ContextUtils.getString(R.string.back_up_progress))
 
-    val onSuccess: (File) => Unit = { file =>
-      Future {
-        copyBackupFile(file)
-      }(Threading.Ui)
-    }
-
-    val onFailure: (String) => Unit = { err =>
-      Future {
-        spinnerController.hideSpinner()
-        ViewUtils.showAlertDialog(
-          getContext,
-          R.string.export_generic_error_title,
-          R.string.export_generic_error_text,
-          android.R.string.ok,
-          null,
-          true
-        )
-      }(Threading.Ui)
-    }
-
     for {
       users      <- inject[Signal[UserService]].head
       self       <- users.selfUser.head
       userHandle =  self.handle.fold("")(_.string)
-      _          <- lifecycle.uiActive.collect{ case true => () }.head
+      _          <- lifecycle.uiActive.collect { case true => () }.head
       _          <- Future {
-                      KotlinServices.INSTANCE.createBackup(self.id, userHandle, password.str, onSuccess, onFailure)
-                 }(Threading.Background)
+                      KotlinServices.INSTANCE.createBackup(self.id, userHandle, password.str, copyBackupFile _, onBackupFailed _)
+                    }(Threading.Background)
     } yield ()
   }
 
-  private def copyBackupFile(file: File) =
+  private def onBackupFailed(err: String): Unit = Future {
+    spinnerController.hideSpinner()
+    ViewUtils.showAlertDialog(
+      getContext,
+      R.string.export_generic_error_title,
+      R.string.export_generic_error_text,
+      android.R.string.ok,
+      null,
+      true
+    )
+  }(Threading.Ui)
+
+  private def copyBackupFile(file: File): Unit = Future {
     if (isShown) {
       val fileUri = sharing.getUriForFile(file)
       val intent = ShareCompat.IntentBuilder.from(context.asInstanceOf[Activity]).setType("application/octet-stream").setStream(fileUri).getIntent
@@ -120,9 +111,9 @@ class BackupExportView(context: Context, attrs: AttributeSet, style: Int)
       }
       context.startActivity(intent)
       spinnerController.hideSpinner(Some(ContextUtils.getString(R.string.back_up_progress_complete)))
-  } else
-    spinnerController.hideSpinner()
-
+    } else
+      spinnerController.hideSpinner()
+  }(Threading.Ui)
 }
 
 object BackupExportView {

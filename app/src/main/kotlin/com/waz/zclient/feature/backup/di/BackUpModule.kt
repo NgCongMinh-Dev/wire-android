@@ -53,7 +53,6 @@ import com.waz.zclient.feature.backup.users.UsersBackUpDataMapper
 import com.waz.zclient.feature.backup.users.UsersBackUpDataSource
 import com.waz.zclient.feature.backup.users.UsersBackUpModel
 import com.waz.zclient.feature.backup.zip.ZipHandler
-import com.waz.zclient.feature.backup.zip.ZipHandlerDataSource
 import com.waz.zclient.storage.db.UserDatabase
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.viewmodel.dsl.viewModel
@@ -89,12 +88,13 @@ val backupModules: List<Module>
 
 val backUpModule = module {
     single { androidContext().externalCacheDir }
-    single { ZipHandlerDataSource(get()) } bind ZipHandler::class
+    single { ZipHandler(get()) }
     single { EncryptionHandlerDataSource(get(), get()) }
 
     factory { Crypto() }
     factory { EncyptionHeaderMetaData(get(), get()) }
     factory { EncryptionHeaderMapper() }
+
 
     factory { CreateBackUpUseCase(getAll(), get(), get(), get()) } //this resolves all instances of type BackUpRepository
     viewModel { BackUpViewModel(get()) }
