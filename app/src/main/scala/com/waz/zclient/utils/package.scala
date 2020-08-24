@@ -372,6 +372,13 @@ package object utils {
       }
     }
 
+    implicit def f0Unit(f: () => Unit): Function1[kotlin.Unit, kotlin.Unit] = new Function1[kotlin.Unit, kotlin.Unit]() {
+      def invoke(p: kotlin.Unit): kotlin.Unit = {
+        f()
+        kotlin.Unit.INSTANCE
+      }
+    }
+
     implicit def f1[T](f: T => Unit): Function1[T, kotlin.Unit] = new Function1[T, kotlin.Unit]() {
       def invoke(t: T): kotlin.Unit = {
         f(t)

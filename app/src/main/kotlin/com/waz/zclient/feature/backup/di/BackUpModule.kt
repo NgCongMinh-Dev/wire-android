@@ -91,7 +91,7 @@ val backUpModule = module {
 
     factory { CreateBackUpUseCase(getAll(), get(), get(), get()) } //this resolves all instances of type BackUpRepository
     factory { RestoreBackUpUseCase(getAll(), get(), get(), get()) }
-    viewModel { BackUpViewModel(get()) }
+    viewModel { BackUpViewModel(get(), get()) }
 
     // MetaData
     factory(named(METADATA + JSON)) { JsonConverter(BackupMetaData.serializer()) }
