@@ -1,10 +1,10 @@
-package com.waz.zclient.feature.backup.encryption.crypto
+package com.waz.zclient.feature.backup.crypto
 
 import com.waz.zclient.core.exception.Failure
 import com.waz.zclient.core.functional.Either
 import com.waz.zclient.core.logging.Logger
-import com.waz.zclient.feature.backup.encryption.EncryptionHandlerDataSource
-import com.waz.zclient.feature.backup.encryption.error.EncryptionFailure
+import com.waz.zclient.feature.backup.crypto.encryption.EncryptionHandler
+import com.waz.zclient.feature.backup.crypto.encryption.error.CryptoFailure
 import org.libsodium.jni.NaCl
 import org.libsodium.jni.Sodium
 import java.security.SecureRandom
@@ -20,7 +20,7 @@ class Crypto {
             System.loadLibrary("randombytes")
             Either.Right(Unit)
         } catch (ex: UnsatisfiedLinkError) {
-            Either.Left(EncryptionFailure(ex.localizedMessage))
+            Either.Left(CryptoFailure(ex.localizedMessage))
         }
     }
 
@@ -62,7 +62,7 @@ class Crypto {
             is Either.Right -> Sodium.randombytes(buffer, count)
             is Either.Left -> {
                 Logger.warn(
-                    EncryptionHandlerDataSource.TAG,
+                    EncryptionHandler.TAG,
                     "Libsodium failed to generate $count random bytes. Falling back to SecureRandom"
                 )
                 secureRandom.nextBytes(buffer)
@@ -73,7 +73,8 @@ class Crypto {
 
     internal fun opsLimit(): Int = Sodium.crypto_pwhash_opslimit_interactive()
     internal fun memLimit(): Int = Sodium.crypto_pwhash_memlimit_interactive()
-    internal fun streamHeaderLength(): Int = Sodium.crypto_secretstream_xchacha20poly1305_headerbytes()
+    internal fun streamHeader() = ByteArray(streamHeaderLength())
+    internal fun streamHeaderLength() = Sodium.crypto_secretstream_xchacha20poly1305_headerbytes()
     internal fun aBytesLength(): Int = Sodium.crypto_secretstream_xchacha20poly1305_abytes()
     internal fun generatePushMessagePart(messageBytes: ByteArray, cipherText: ByteArray, msg: ByteArray) =
         Sodium.crypto_secretstream_xchacha20poly1305_push(
@@ -87,7 +88,7 @@ class Crypto {
             Sodium.crypto_secretstream_xchacha20poly1305_tag_final().toShort()
         )
 
-    internal fun generateDecryptMessagePart(state: ByteArray, decrypted: ByteArray, cipherText: ByteArray) =
+    internal fun generatePullMessagePart(state: ByteArray, decrypted: ByteArray, cipherText: ByteArray) =
         Sodium.crypto_secretstream_xchacha20poly1305_pull(
             state,
             decrypted,
@@ -101,7 +102,7 @@ class Crypto {
 
     internal fun encryptExpectedKeyBytes() = Sodium.crypto_aead_chacha20poly1305_keybytes()
     internal fun decryptExpectedKeyBytes() = Sodium.crypto_secretstream_xchacha20poly1305_keybytes()
-    internal fun generatePwhashMessagePart(output: ByteArray, passBytes: ByteArray, salt: ByteArray) =
+    private fun generatePwhashMessagePart(output: ByteArray, passBytes: ByteArray, salt: ByteArray) =
         Sodium.crypto_pwhash(
             output,
             output.size,
@@ -112,6 +113,13 @@ class Crypto {
             memLimit(),
             Sodium.crypto_pwhash_alg_default()
         )
+
+    internal fun hash(input: String, salt: ByteArray): ByteArray? {
+        val output = ByteArray(encryptExpectedKeyBytes())
+        val passBytes = input.toByteArray()
+        val pushMessage = generatePwhashMessagePart(output, passBytes, salt)
+        return pushMessage.takeIf { it == 0 }?.let { output }
+    }
 
     companion object {
         //Got this magic number from https://github.com/joshjdevl/libsodium-jni/blob/master/src/test/java/org/libsodium/jni/crypto/SecretStreamTest.java#L48

@@ -21,10 +21,11 @@ import com.waz.zclient.feature.backup.conversations.ConversationRolesBackupDataS
 import com.waz.zclient.feature.backup.conversations.ConversationsBackUpModel
 import com.waz.zclient.feature.backup.conversations.ConversationsBackupDataSource
 import com.waz.zclient.feature.backup.conversations.ConversationsBackupMapper
-import com.waz.zclient.feature.backup.encryption.EncryptionHandlerDataSource
-import com.waz.zclient.feature.backup.encryption.crypto.Crypto
-import com.waz.zclient.feature.backup.encryption.header.EncryptionHeaderMapper
-import com.waz.zclient.feature.backup.encryption.header.EncyptionHeaderMetaData
+import com.waz.zclient.feature.backup.crypto.Crypto
+import com.waz.zclient.feature.backup.crypto.decryption.DecryptionHandler
+import com.waz.zclient.feature.backup.crypto.encryption.EncryptionHandler
+import com.waz.zclient.feature.backup.crypto.header.CryptoHeaderMetaData
+import com.waz.zclient.feature.backup.crypto.header.EncryptionHeaderMapper
 import com.waz.zclient.feature.backup.folders.FoldersBackUpModel
 import com.waz.zclient.feature.backup.folders.FoldersBackupDataSource
 import com.waz.zclient.feature.backup.folders.FoldersBackupMapper
@@ -89,10 +90,11 @@ val backupModules: List<Module>
 val backUpModule = module {
     single { androidContext().externalCacheDir }
     single { ZipHandler(get()) }
-    single { EncryptionHandlerDataSource(get(), get()) }
+    single { EncryptionHandler(get(), get()) }
+    single { DecryptionHandler(get(), get()) }
 
     factory { Crypto() }
-    factory { EncyptionHeaderMetaData(get(), get()) }
+    factory { CryptoHeaderMetaData(get(), get()) }
     factory { EncryptionHeaderMapper() }
 
 

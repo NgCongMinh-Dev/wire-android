@@ -6,7 +6,7 @@ import com.waz.zclient.core.exception.DatabaseError
 import com.waz.zclient.core.exception.FeatureFailure
 import com.waz.zclient.core.functional.Either
 import com.waz.zclient.feature.backup.BackUpRepository
-import com.waz.zclient.feature.backup.encryption.EncryptionHandlerDataSource
+import com.waz.zclient.feature.backup.crypto.encryption.EncryptionHandler
 import com.waz.zclient.feature.backup.metadata.MetaDataHandler
 import com.waz.zclient.feature.backup.zip.ZipHandler
 
@@ -210,7 +210,7 @@ class CreateBackUpUseCaseTest : UnitTest() {
             )
         }
 
-        fun mockEncryptionHandler(encryptionSuccess: Boolean = true): EncryptionHandlerDataSource = mock(EncryptionHandlerDataSource::class.java).also {
+        fun mockEncryptionHandler(encryptionSuccess: Boolean = true): EncryptionHandler = mock(EncryptionHandler::class.java).also {
             `when`(it.encryptBackup(any(), any(), anyString())).thenReturn(
                 if (encryptionSuccess) Either.Right(createTempFile(suffix = "_encrypted"))
                 else Either.Left(FakeEncryptionFailure)

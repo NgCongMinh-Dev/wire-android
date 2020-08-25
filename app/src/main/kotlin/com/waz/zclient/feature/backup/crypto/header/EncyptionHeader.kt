@@ -1,10 +1,10 @@
-package com.waz.zclient.feature.backup.encryption.header
+package com.waz.zclient.feature.backup.crypto.header
 
 import com.waz.zclient.core.exception.Failure
 import com.waz.zclient.core.functional.Either
 import com.waz.zclient.core.logging.Logger
-import com.waz.zclient.feature.backup.encryption.crypto.Crypto
-import com.waz.zclient.feature.backup.encryption.error.EncryptionFailure
+import com.waz.zclient.feature.backup.crypto.Crypto
+import com.waz.zclient.feature.backup.crypto.encryption.error.CryptoFailure
 import java.io.File
 import java.nio.ByteBuffer
 
@@ -16,7 +16,7 @@ internal const val CURRENT_VERSION: Short = 2
 const val UUID_HASH_LENGTH = 32
 const val TOTAL_HEADER_LENGTH = ANDROID_MAGIC_NUMBER_LENGTH + 1 + 2 + SALT_LENGTH + UUID_HASH_LENGTH + 4 + 4
 
-class EncyptionHeaderMetaData(
+class CryptoHeaderMetaData(
     private val crypto: Crypto,
     private val encryptionHeaderMapper: EncryptionHeaderMapper
 ) {
@@ -34,9 +34,8 @@ class EncyptionHeaderMetaData(
         hash.size.takeIf { it == UUID_HASH_LENGTH }?.let {
             val header = EncryptedBackupHeader(CURRENT_VERSION, salt, hash, crypto.opsLimit(), crypto.memLimit())
             Either.Right(encryptionHeaderMapper.toByteArray(header))
-        } ?: Either.Left(
-            EncryptionFailure("uuidHash length invalid, expected: $UUID_HASH_LENGTH, got: ${hash.size}")
-        )
+        }
+            ?: Either.Left(CryptoFailure("uuidHash length invalid, expected: $UUID_HASH_LENGTH, got: ${hash.size}"))
 }
 
 class EncryptionHeaderMapper {
@@ -90,6 +89,10 @@ data class EncryptedBackupHeader(
     val version: Short = CURRENT_VERSION,
     val salt: ByteArray,
     val uuidHash: ByteArray,
-    val opsLimit: Int,
-    val memLimit: Int
-)
+    val opsLimit: Int = 0,
+    val memLimit: Int = 0
+) {
+    companion object {
+        val EMPTY = EncryptedBackupHeader(CURRENT_VERSION, byteArrayOf(0), byteArrayOf(0), 0, 0)
+    }
+}
